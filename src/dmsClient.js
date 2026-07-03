@@ -75,6 +75,24 @@ function cleanSearch(value) {
     .trim();
 }
 
+function compactObject(values = {}) {
+  return Object.fromEntries(
+    Object.entries(values).filter(([, value]) => value !== undefined && value !== null && value !== '')
+  );
+}
+
+function numberOrNull(value) {
+  if (value === '' || value === undefined || value === null) return null;
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : null;
+}
+
+function isoOrNull(value) {
+  if (!value) return null;
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? null : date.toISOString();
+}
+
 function todayStartIso() {
   const value = new Date();
   value.setHours(0, 0, 0, 0);
@@ -397,6 +415,111 @@ export class DmsApi {
     });
   }
 
+  async getPatientProfile(patientId) {
+    if (!patientId) return null;
+
+    const [patientRows, visits, files, appointments, invoices, payments] = await Promise.all([
+      this.rest(
+        `patients?${queryPairs([
+          ['select', '*'],
+          ['id', `eq.${patientId}`],
+          ['limit', '1'],
+        ])}`
+      ).catch(() => []),
+
+      this.rest(
+        `patient_visits?${queryPairs([
+          ['select', '*'],
+          ['patient_id', `eq.${patientId}`],
+          ['order', 'created_at.desc'],
+          ['limit', '1000'],
+        ])}`
+      ).catch(() => []),
+
+      this.rest(
+        `files?${queryPairs([
+          ['select', '*'],
+          ['patient_id', `eq.${patientId}`],
+          ['order', 'created_at.desc'],
+          ['limit', '1000'],
+        ])}`
+      ).catch(() => []),
+
+      this.rest(
+        `appointments?${queryPairs([
+          ['select', '*'],
+          ['patient_id', `eq.${patientId}`],
+          ['order', 'appointment_time.desc'],
+          ['limit', '1000'],
+        ])}`
+      ).catch(() => []),
+
+      this.rest(
+        `invoices?${queryPairs([
+          ['select', '*'],
+          ['patient_id', `eq.${patientId}`],
+          ['order', 'created_at.desc'],
+          ['limit', '1000'],
+        ])}`
+      ).catch(() => []),
+
+      this.rest(
+        `payments?${queryPairs([
+          ['select', '*'],
+          ['patient_id', `eq.${patientId}`],
+          ['order', 'created_at.desc'],
+          ['limit', '1000'],
+        ])}`
+      ).catch(() => []),
+    ]);
+
+    return {
+      patient: patientRows?.[0] || null,
+      visits: visits || [],
+      files: files || [],
+      appointments: appointments || [],
+      invoices: invoices || [],
+      payments: payments || [],
+    };
+  }
+
+  async createPatient(input, clinicId) {
+    const body = compactObject({
+      clinic_id: input.clinic_id || clinicId,
+      patient_code: input.patient_code,
+      name: input.name?.trim(),
+      phone: input.phone?.trim(),
+      age: numberOrNull(input.age),
+      gender: input.gender,
+    });
+
+    return this.rest('patients', {
+      method: 'POST',
+      body,
+    });
+  }
+
+  async updatePatient(patientId, input) {
+    const body = compactObject({
+      patient_code: input.patient_code,
+      name: input.name?.trim(),
+      phone: input.phone?.trim(),
+      age: numberOrNull(input.age),
+      gender: input.gender,
+    });
+
+    return this.rest(`patients?${queryPairs([['id', `eq.${patientId}`]])}`, {
+      method: 'PATCH',
+      body,
+    });
+  }
+
+  async deletePatient(patientId) {
+    return this.rest(`patients?${queryPairs([['id', `eq.${patientId}`]])}`, {
+      method: 'DELETE',
+    });
+  }
+
   async getPatientsByIds(ids = []) {
     const cleanIds = [...new Set(ids.filter(Boolean))];
 
@@ -450,6 +573,42 @@ export class DmsApi {
         patients: byId.get(item.patient_id) || null,
       }));
     }
+  }
+
+  async createAppointment(input, clinicId, doctorId) {
+    const body = compactObject({
+      clinic_id: input.clinic_id || clinicId,
+      patient_id: input.patient_id,
+      doctor_id: input.doctor_id || doctorId,
+      appointment_time: isoOrNull(input.appointment_time),
+      status: input.status || 'scheduled',
+      notes: input.notes,
+    });
+
+    return this.rest('appointments', {
+      method: 'POST',
+      body,
+    });
+  }
+
+  async updateAppointment(appointmentId, input) {
+    const body = compactObject({
+      appointment_time: isoOrNull(input.appointment_time),
+      status: input.status,
+      notes: input.notes,
+      doctor_id: input.doctor_id,
+    });
+
+    return this.rest(`appointments?${queryPairs([['id', `eq.${appointmentId}`]])}`, {
+      method: 'PATCH',
+      body,
+    });
+  }
+
+  async deleteAppointment(appointmentId) {
+    return this.rest(`appointments?${queryPairs([['id', `eq.${appointmentId}`]])}`, {
+      method: 'DELETE',
+    });
   }
 
   async getPendingPayments(search = '') {
@@ -536,7 +695,7 @@ export class DmsApi {
   async getStaff() {
     return this.rest(
       `profiles?${queryPairs([
-        ['select', 'id,name,email,role,active,created_at'],
+        ['select', 'id,name,email,phone,role,active,created_at'],
         ['order', 'created_at.desc'],
         ['limit', '120'],
       ])}`
@@ -576,11 +735,106 @@ export class DmsApi {
 
     return this.rest(
       `profiles?${queryPairs([
-        ['select', 'id,name,email,role,active,created_at'],
+        ['select', 'id,name,email,phone,role,active,created_at'],
         ['id', `in.(${cleanIds.join(',')})`],
         ['limit', '1000'],
       ])}`
     ).catch(() => []);
+  }
+
+  async updateProfile(profileId, values) {
+    const withPhone = compactObject({
+      name: values.name,
+      email: values.email,
+      phone: values.phone,
+    });
+
+    try {
+      return await this.rest(`profiles?${queryPairs([['id', `eq.${profileId}`]])}`, {
+        method: 'PATCH',
+        body: withPhone,
+      });
+    } catch {
+      const fallback = compactObject({
+        name: values.name,
+        email: values.email,
+      });
+
+      return this.rest(`profiles?${queryPairs([['id', `eq.${profileId}`]])}`, {
+        method: 'PATCH',
+        body: fallback,
+      });
+    }
+  }
+
+  async updateStaffProfile(profileId, values) {
+    const withPhone = compactObject({
+      name: values.name,
+      email: values.email,
+      phone: values.phone,
+      role: values.role,
+      active: values.active,
+    });
+
+    try {
+      return await this.rest(`profiles?${queryPairs([['id', `eq.${profileId}`]])}`, {
+        method: 'PATCH',
+        body: withPhone,
+      });
+    } catch {
+      const fallback = compactObject({
+        name: values.name,
+        email: values.email,
+        role: values.role,
+        active: values.active,
+      });
+
+      return this.rest(`profiles?${queryPairs([['id', `eq.${profileId}`]])}`, {
+        method: 'PATCH',
+        body: fallback,
+      });
+    }
+  }
+
+  async deleteStaffProfile(profileId) {
+    return this.rest(`profiles?${queryPairs([['id', `eq.${profileId}`]])}`, {
+      method: 'DELETE',
+    });
+  }
+
+  async deleteInvite(inviteId) {
+    return this.rest(`staff_invites?${queryPairs([['id', `eq.${inviteId}`]])}`, {
+      method: 'DELETE',
+    });
+  }
+
+  async createVisit(input, clinicId, doctorId) {
+    const body = compactObject({
+      clinic_id: input.clinic_id || clinicId,
+      patient_id: input.patient_id,
+      doctor_id: input.doctor_id || doctorId,
+      visit_date: isoOrNull(input.visit_date) || new Date().toISOString(),
+      chief_complaint: input.chief_complaint,
+      notes: input.notes,
+      next_appointment_date: isoOrNull(input.next_appointment_date),
+    });
+
+    return this.rest('patient_visits', {
+      method: 'POST',
+      body,
+    });
+  }
+
+  async deleteVisit(visitId) {
+    return this.rest(`patient_visits?${queryPairs([['id', `eq.${visitId}`]])}`, {
+      method: 'DELETE',
+    });
+  }
+
+  async deleteFileRecord(fileId) {
+    return this.rest(`files?${queryPairs([['id', `eq.${fileId}`]])}`, {
+      method: 'DELETE',
+    });
   }
 
   async getVisitAudit(search = '') {
