@@ -3,7 +3,6 @@
   const sessionKey = 'bg_reddy_dms_owner_session_v3';
   let monthOffset = 0;
   let busy = false;
-  let tries = 0;
 
   const rupees = (n) => '₹' + Math.round(Number(n || 0)).toLocaleString('en-IN');
   const readSession = () => { try { return JSON.parse(localStorage.getItem(sessionKey) || 'null'); } catch { return null; } };
@@ -78,9 +77,9 @@
     load();
   });
 
-  const timer = setInterval(() => {
-    tries += 1;
-    if (target()) { clearInterval(timer); load(); }
-    if (tries > 60) clearInterval(timer);
-  }, 500);
+  setInterval(() => {
+    const grid = target();
+    const card = document.getElementById(boxId);
+    if (grid && !card && !busy) load();
+  }, 700);
 })();
