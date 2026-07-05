@@ -1,23 +1,38 @@
 /* Staff section design polish: invite form, staff editor, account list and invite list */
-.staff-form,
-.staff-edit-form {
-  gap: 12px !important;
+.management-layout .portal-card .staff-form,
+.management-layout .portal-card .staff-edit-form {
+  display: grid !important;
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  gap: 14px !important;
+  align-items: stretch !important;
 }
 
-.staff-form input,
-.staff-form select,
-.staff-edit-form input,
-.staff-edit-form select {
-  min-height: 48px;
+.management-layout .portal-card .staff-form input,
+.management-layout .portal-card .staff-form select,
+.management-layout .portal-card .staff-edit-form input,
+.management-layout .portal-card .staff-edit-form select {
+  width: 100% !important;
+  min-width: 0 !important;
+  min-height: 52px !important;
   background: #ffffff !important;
   border-color: #c8dff3 !important;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.85);
+  border-radius: 10px !important;
+  padding: 0 16px !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.85) !important;
 }
 
-.staff-form .btn,
-.staff-edit-form .btn {
-  min-height: 48px;
-  width: 100%;
+.management-layout .portal-card .staff-form .btn,
+.management-layout .portal-card .staff-edit-form .btn {
+  width: 100% !important;
+  min-width: 0 !important;
+  min-height: 52px !important;
+  white-space: normal !important;
+  line-height: 1.15 !important;
+}
+
+.management-layout .portal-card .staff-edit-form .check-row,
+.management-layout .portal-card .staff-edit-form .action-row {
+  grid-column: 1 / -1 !important;
 }
 
 .staff-edit-form .check-row {
@@ -110,37 +125,7 @@
   justify-content: center;
 }
 
-@media (min-width: 620px) {
-  .staff-form {
-    grid-template-columns: minmax(180px, 1fr) minmax(220px, 1.15fr);
-  }
-
-  .staff-form select,
-  .staff-form .btn {
-    grid-column: auto;
-  }
-
-  .staff-edit-form {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
-  .staff-edit-form .check-row,
-  .staff-edit-form .action-row {
-    grid-column: 1 / -1;
-  }
-}
-
 @media (min-width: 960px) {
-  .staff-form {
-    grid-template-columns: minmax(180px, 1fr) minmax(230px, 1.2fr) 190px 150px !important;
-    align-items: stretch;
-  }
-
-  .staff-edit-form {
-    grid-template-columns: minmax(170px, 1fr) minmax(220px, 1.2fr) minmax(150px, 0.8fr) 180px !important;
-    align-items: stretch;
-  }
-
   .wide-card .split-grid .action-table-row {
     grid-template-columns: minmax(0, 1fr) max-content minmax(250px, 0.55fr);
     align-items: center;
@@ -151,7 +136,12 @@
   }
 }
 
-@media (max-width: 619px) {
+@media (max-width: 720px) {
+  .management-layout .portal-card .staff-form,
+  .management-layout .portal-card .staff-edit-form {
+    grid-template-columns: 1fr !important;
+  }
+
   .wide-card .split-grid > div {
     padding: 12px;
   }
