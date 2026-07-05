@@ -1,0 +1,166 @@
+/* Staff section design polish: invite form, staff editor, account list and invite list */
+.staff-form,
+.staff-edit-form {
+  gap: 12px !important;
+}
+
+.staff-form input,
+.staff-form select,
+.staff-edit-form input,
+.staff-edit-form select {
+  min-height: 48px;
+  background: #ffffff !important;
+  border-color: #c8dff3 !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.85);
+}
+
+.staff-form .btn,
+.staff-edit-form .btn {
+  min-height: 48px;
+  width: 100%;
+}
+
+.staff-edit-form .check-row {
+  width: max-content;
+  max-width: 100%;
+  background: #f4fbff;
+  border: 1px solid #d3e5f5;
+  border-radius: 999px;
+  padding: 10px 12px;
+}
+
+.management-layout > .portal-card:nth-child(1),
+.management-layout > .portal-card:nth-child(2) {
+  align-self: start;
+}
+
+.wide-card .split-grid {
+  gap: 16px;
+}
+
+.wide-card .split-grid > div {
+  min-width: 0;
+  border: 1px solid #d3e5f5;
+  border-radius: 14px;
+  background: linear-gradient(180deg, #ffffff 0%, #f7fcff 100%);
+  padding: 14px;
+}
+
+.wide-card .split-grid h4 {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin: 0 0 12px;
+  color: #08223c;
+  font-size: 17px;
+}
+
+.wide-card .split-grid .table-list {
+  gap: 10px;
+}
+
+.wide-card .split-grid .table-row {
+  background: #ffffff;
+  border-color: #d7e8f6;
+  box-shadow: 0 10px 24px rgba(8, 34, 60, 0.06);
+  padding: 13px;
+}
+
+.wide-card .split-grid .table-row > div:first-child {
+  min-width: 0;
+}
+
+.wide-card .split-grid .table-row b {
+  font-size: 15px;
+  line-height: 1.25;
+}
+
+.wide-card .split-grid .table-row small {
+  color: #5f7285;
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.wide-card .split-grid .table-row > span {
+  justify-self: start;
+  width: max-content;
+  max-width: 100%;
+  border-radius: 999px;
+  background: #e8f6ff;
+  border: 1px solid #c8e4f8;
+  color: #0756a5;
+  padding: 7px 10px;
+  font-size: 12px;
+  line-height: 1;
+  text-align: center;
+}
+
+.wide-card .split-grid .row-actions {
+  width: 100%;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.wide-card .split-grid .row-actions button {
+  width: 100%;
+  min-height: 38px;
+  padding: 0 10px;
+  justify-content: center;
+}
+
+@media (min-width: 620px) {
+  .staff-form {
+    grid-template-columns: minmax(180px, 1fr) minmax(220px, 1.15fr);
+  }
+
+  .staff-form select,
+  .staff-form .btn {
+    grid-column: auto;
+  }
+
+  .staff-edit-form {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .staff-edit-form .check-row,
+  .staff-edit-form .action-row {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (min-width: 960px) {
+  .staff-form {
+    grid-template-columns: minmax(180px, 1fr) minmax(230px, 1.2fr) 190px 150px !important;
+    align-items: stretch;
+  }
+
+  .staff-edit-form {
+    grid-template-columns: minmax(170px, 1fr) minmax(220px, 1.2fr) minmax(150px, 0.8fr) 180px !important;
+    align-items: stretch;
+  }
+
+  .wide-card .split-grid .action-table-row {
+    grid-template-columns: minmax(0, 1fr) max-content minmax(250px, 0.55fr);
+    align-items: center;
+  }
+
+  .wide-card .split-grid .table-row > span {
+    justify-self: center;
+  }
+}
+
+@media (max-width: 619px) {
+  .wide-card .split-grid > div {
+    padding: 12px;
+  }
+
+  .wide-card .split-grid .row-actions {
+    grid-template-columns: 1fr;
+  }
+
+  .wide-card .split-grid .table-row > span {
+    justify-self: start;
+  }
+}
