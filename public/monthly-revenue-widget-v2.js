@@ -2,6 +2,7 @@
   const SESSION_KEY = 'bg_reddy_dms_owner_session_v3';
   const ID = 'monthly-revenue-dashboard-widget';
   let offset = 0;
+  let loading = false;
 
   function session() {
     try { return JSON.parse(localStorage.getItem(SESSION_KEY) || 'null'); } catch { return null; }
@@ -68,8 +69,10 @@
   }
 
   async function load() {
+    if (loading) return;
     const el = mount();
     if (!el) return;
+    loading = true;
     const r = range();
     el.innerHTML = html({ label: r.label, total: 0, count: 0, avg: 0, best: 0, days: r.days, status: 'Loading selected month...' });
     const c = config();
@@ -77,6 +80,7 @@
     const token = s && s.access_token;
     if (!c.url || !c.key || !token) {
       el.innerHTML = html({ label: r.label, total: 0, count: 0, avg: 0, best: 0, days: r.days, status: 'Login and DMS config required.' });
+      loading = false;
       return;
     }
 
@@ -97,16 +101,21 @@
     } catch (e) {
       el.innerHTML = html({ label: r.label, total: 0, count: 0, avg: 0, best: 0, days: r.days, status: 'Could not load monthly revenue: ' + e.message });
     }
+    loading = false;
   }
 
   document.addEventListener('click', (event) => {
     const btn = event.target.closest('#' + ID + ' [data-rev-nav]');
-    if (!btn) { setTimeout(load, 350); return; }
+    if (!btn) return;
+    event.preventDefault();
+    event.stopPropagation();
     offset = Math.min(0, offset + Number(btn.getAttribute('data-rev-nav') || 0));
     load();
   });
 
-  window.addEventListener('load', load);
-  window.addEventListener('hashchange', load);
-  new MutationObserver(() => setTimeout(load, 350)).observe(document.documentElement, { childList: true, subtree: true });
+  window.addEventListener('load', () => setTimeout(load, 600));
+  window.addEventListener('hashchange', () => setTimeout(load, 600));
+  setInterval(() => {
+    if ((document.querySelector('.dashboard-grid') || document.querySelector('.control-panel-grid')) && !document.getElementById(ID)) load();
+  }, 1000);
 })();
