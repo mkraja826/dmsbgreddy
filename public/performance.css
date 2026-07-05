@@ -1,0 +1,65 @@
+/* PageSpeed and accessibility overrides loaded before the app bundle. */
+:focus-visible {
+  outline: 3px solid rgba(5, 58, 121, 0.42);
+  outline-offset: 3px;
+}
+
+.logo-img,
+.gallery-scroll img,
+.molar-canvas canvas {
+  content-visibility: auto;
+}
+
+.topbar,
+.nav-menu,
+.dental-stage,
+.stage-shine,
+.device-card,
+.portal-hero-card,
+.portal-card,
+.appointment-card {
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
+}
+
+.orbit-ring,
+.stage-grid,
+.stage-shine,
+.tooth-shadow,
+.tooth-backdrop {
+  will-change: auto !important;
+}
+
+.gallery-scroll figure,
+.service-card,
+.review,
+.portal-card,
+.control-card,
+.appointment-card {
+  contain: layout paint style;
+}
+
+.gallery-scroll img {
+  background: #eef7ff;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: 0.001ms !important;
+  }
+}
+
+@media (max-width: 760px) {
+  .hero {
+    padding-top: 34px !important;
+  }
+
+  .dental-stage {
+    transform: none !important;
+  }
+}

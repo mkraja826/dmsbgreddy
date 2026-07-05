@@ -1,0 +1,10 @@
+# Sri B.G Reddy Dental Clinic
+
+Website: https://www.bgreddydentalclinic.com/
+
+Clinic information:
+- Name: Sri B.G Reddy Dental Clinic
+- Location: Gandimaisamma, Hyderabad, Telangana, India
+- Phone: +91 98493 26242
+
+This file gives AI agents a simple summary of the public website and directs them to the homepage for current clinic information.
