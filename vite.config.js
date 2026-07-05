@@ -11,15 +11,6 @@ export default defineConfig({
     sourcemap: true,
     target: 'es2020',
     cssCodeSplit: true,
-    modulePreload: false,
-    rollupOptions: {
-      output: {
-        manualChunks: {
-          react: ['react', 'react-dom'],
-          three: ['three'],
-          supabase: ['@supabase/supabase-js']
-        }
-      }
-    }
+    modulePreload: false
   }
 });
