@@ -1,0 +1,80 @@
+/* Restores real clinic logo and enables lazy rotating 3D molar without blocking first paint. */
+.real-clinic-logo {
+  width: 48px;
+  height: 48px;
+  object-fit: contain;
+  border-radius: 14px;
+  background: #ffffff;
+  padding: 2px;
+  filter: drop-shadow(0 8px 14px rgba(8, 34, 60, 0.12));
+}
+
+.brand .real-clinic-logo {
+  flex: 0 0 48px;
+}
+
+.device-body .real-clinic-logo,
+.footer .real-clinic-logo,
+.real-clinic-logo.large {
+  width: 72px;
+  height: 72px;
+  padding: 4px;
+  border-radius: 16px;
+  margin: auto;
+}
+
+.lite-home .fast-rotating-molar {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  display: grid;
+  place-items: center;
+  pointer-events: none;
+}
+
+.lite-home .molar-canvas.rotating-molar-canvas {
+  display: block !important;
+  position: relative;
+  z-index: 4;
+  width: min(88%, 560px);
+  height: min(88%, 510px);
+  opacity: 0;
+  transition: opacity 520ms ease;
+  pointer-events: none;
+}
+
+.lite-home .rotating-molar-canvas canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.lite-home .fast-rotating-molar.is-loaded .rotating-molar-canvas {
+  opacity: 1;
+}
+
+.lite-home .fast-rotating-molar.is-loaded .molar-model-fallback {
+  opacity: 0 !important;
+  pointer-events: none;
+}
+
+.lite-home .fast-rotating-molar.is-failed .molar-model-fallback {
+  opacity: 1 !important;
+}
+
+@media (max-width: 620px) {
+  .lite-home .molar-canvas.rotating-molar-canvas {
+    width: min(96%, 420px);
+    height: min(96%, 390px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lite-home .molar-canvas.rotating-molar-canvas {
+    display: none !important;
+  }
+
+  .lite-home .fast-rotating-molar .molar-model-fallback {
+    opacity: 1 !important;
+  }
+}
