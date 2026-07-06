@@ -4,6 +4,7 @@
   const SUPABASE_ANON_KEY = String(CONFIG.SUPABASE_ANON_KEY || CONFIG.supabaseAnonKey || '');
   const SESSION_KEY = 'bg_reddy_dms_owner_session_v3';
   const URL_CACHE = new Map();
+  const SIGNING_MARK = 'dmsPrivateSigningSource';
 
   function readSession() {
     try {
@@ -20,6 +21,8 @@
   function toAbsoluteUrl(value) {
     if (!value) return '';
     if (value.startsWith('http://') || value.startsWith('https://')) return value;
+    if (value.startsWith('/storage/')) return `${SUPABASE_URL}${value}`;
+    if (value.startsWith('/object/')) return `${SUPABASE_URL}/storage/v1${value}`;
     if (value.startsWith('/')) return `${SUPABASE_URL}${value}`;
     return value;
   }
@@ -32,6 +35,14 @@
     }
   }
 
+  function cleanObjectPath(value) {
+    return decodePath(String(value || ''))
+      .split('?')[0]
+      .split('#')[0]
+      .replace(/^\/+/, '')
+      .trim();
+  }
+
   function extractStorageRef(rawUrl) {
     if (!SUPABASE_URL || !rawUrl) return null;
 
@@ -42,23 +53,35 @@
       return null;
     }
 
-    if (!url.href.includes('/storage/v1/object/')) return null;
+    const marker = '/storage/v1/';
+    const markerIndex = url.pathname.indexOf(marker);
+    if (markerIndex === -1) return null;
 
-    const marker = '/storage/v1/object/';
-    const afterMarker = url.pathname.slice(url.pathname.indexOf(marker) + marker.length);
+    const afterMarker = url.pathname.slice(markerIndex + marker.length);
     const parts = afterMarker.split('/').filter(Boolean);
 
-    if (parts.length < 2) return null;
+    if (!parts.length) return null;
 
-    const visibilitySegments = new Set(['public', 'sign', 'authenticated', 'render']);
-    const startsWithVisibility = visibilitySegments.has(parts[0]);
-    const bucket = startsWithVisibility ? parts[1] : parts[0];
-    const objectParts = startsWithVisibility ? parts.slice(2) : parts.slice(1);
-    const path = decodePath(objectParts.join('/'));
+    if (parts[0] === 'object') parts.shift();
+    if (parts[0] === 'render' && parts[1] === 'image') parts.splice(0, 2);
 
-    if (!bucket || !path) return null;
+    const visibilitySegments = new Set(['public', 'sign', 'authenticated']);
+    if (visibilitySegments.has(parts[0])) parts.shift();
+
+    const bucket = parts.shift();
+    const path = cleanObjectPath(parts.join('/'));
+
+    if (!bucket || !path || path === bucket) return null;
 
     return { bucket, path, cacheKey: `${bucket}/${path}` };
+  }
+
+  function getSignedUrlFromResponse(data) {
+    const row = Array.isArray(data)
+      ? data[0]
+      : data?.signedUrls?.[0] || data?.signedURLs?.[0] || data;
+
+    return row?.signedUrl || row?.signedURL || row?.signed_url || '';
   }
 
   async function createSignedUrl(storageRef) {
@@ -66,25 +89,38 @@
 
     if (URL_CACHE.has(storageRef.cacheKey)) return URL_CACHE.get(storageRef.cacheKey);
 
-    const endpoint = `${SUPABASE_URL}/storage/v1/object/sign/${encodeURIComponent(storageRef.bucket)}/${storageRef.path
-      .split('/')
-      .map(encodeURIComponent)
-      .join('/')}`;
+    const batchEndpoint = `${SUPABASE_URL}/storage/v1/object/sign/${encodeURIComponent(storageRef.bucket)}`;
+    const headers = {
+      apikey: SUPABASE_ANON_KEY,
+      Authorization: `Bearer ${token()}`,
+      'Content-Type': 'application/json',
+    };
 
-    const response = await fetch(endpoint, {
+    let response = await fetch(batchEndpoint, {
       method: 'POST',
-      headers: {
-        apikey: SUPABASE_ANON_KEY,
-        Authorization: `Bearer ${token()}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ expiresIn: 3600 }),
+      headers,
+      body: JSON.stringify({ expiresIn: 3600, paths: [storageRef.path] }),
     });
 
-    if (!response.ok) return '';
+    let data = await response.json().catch(() => null);
+    let signed = response.ok ? getSignedUrlFromResponse(data) : '';
 
-    const data = await response.json().catch(() => null);
-    const signed = data?.signedURL || data?.signedUrl || data?.signed_url || '';
+    if (!signed) {
+      const pathEndpoint = `${SUPABASE_URL}/storage/v1/object/sign/${encodeURIComponent(storageRef.bucket)}/${storageRef.path
+        .split('/')
+        .map(encodeURIComponent)
+        .join('/')}`;
+
+      response = await fetch(pathEndpoint, {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({ expiresIn: 3600 }),
+      });
+
+      data = await response.json().catch(() => null);
+      signed = response.ok ? getSignedUrlFromResponse(data) : '';
+    }
+
     const absolute = toAbsoluteUrl(signed);
 
     if (absolute) URL_CACHE.set(storageRef.cacheKey, absolute);
@@ -94,23 +130,31 @@
 
   async function signElementAttribute(element, attribute) {
     const currentUrl = element.getAttribute(attribute);
-    if (!currentUrl || element.dataset?.dmsPrivateSigned === currentUrl) return;
+    if (!currentUrl) return;
+
+    if (element.dataset?.[SIGNING_MARK] === currentUrl) return;
 
     const storageRef = extractStorageRef(currentUrl);
     if (!storageRef) return;
 
-    element.dataset.dmsPrivateSigned = currentUrl;
+    element.dataset[SIGNING_MARK] = currentUrl;
 
     try {
       const signedUrl = await createSignedUrl(storageRef);
-      if (signedUrl) element.setAttribute(attribute, signedUrl);
+      if (signedUrl) {
+        element.setAttribute(attribute, signedUrl);
+        element.dataset[SIGNING_MARK] = signedUrl;
+      }
     } catch {
-      delete element.dataset.dmsPrivateSigned;
+      delete element.dataset[SIGNING_MARK];
     }
   }
 
   function signVisibleStorageUrls(root = document) {
     if (!SUPABASE_URL || !SUPABASE_ANON_KEY) return;
+
+    if (root.matches?.('img[src]')) signElementAttribute(root, 'src');
+    if (root.matches?.('a[href]')) signElementAttribute(root, 'href');
 
     root.querySelectorAll?.('img[src]').forEach((img) => signElementAttribute(img, 'src'));
     root.querySelectorAll?.('a[href]').forEach((link) => signElementAttribute(link, 'href'));
