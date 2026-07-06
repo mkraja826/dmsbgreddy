@@ -1,4 +1,4 @@
-/* Restores real clinic logo and enables lazy rotating 3D molar without blocking first paint. */
+/* Real clinic logo, lazy rotating molar and stable public gallery. */
 .real-clinic-logo {
   width: 48px;
   height: 48px;
@@ -62,85 +62,116 @@
   opacity: 1 !important;
 }
 
-/* Stable premium Photos section. This overrides the earlier experimental split layout. */
-.lite-home .premium-gallery-section {
-  overflow: hidden !important;
+.lite-home .stable-gallery-section {
+  position: relative;
+  max-width: 1180px;
+  margin-inline: auto;
+  overflow: hidden;
 }
 
-.lite-home .premium-gallery-shell {
-  display: block !important;
+.lite-home .stable-gallery-title {
+  text-align: center;
+  max-width: 760px;
+  margin: 0 auto 30px !important;
+}
+
+.lite-home .stable-gallery-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 18px;
   width: 100%;
 }
 
-.lite-home .premium-photo-feature {
-  position: relative !important;
-  min-height: auto !important;
-  height: auto !important;
-  aspect-ratio: 16 / 9;
-  border-radius: 28px !important;
-  margin: 0 0 18px !important;
-  background: #eef7ff;
-  box-shadow: 0 24px 70px rgba(8, 34, 60, 0.13) !important;
-}
-
-.lite-home .premium-photo-feature img {
-  position: absolute !important;
-  inset: 0 !important;
-  width: 100% !important;
-  height: 100% !important;
-  object-fit: cover !important;
-}
-
-.lite-home .premium-photo-copy {
-  position: absolute !important;
-  left: 0 !important;
-  right: 0 !important;
-  bottom: 0 !important;
-  max-width: 720px !important;
-  padding: clamp(20px, 4vw, 42px) !important;
-}
-
-.lite-home .premium-photo-copy h3 {
-  font-size: clamp(28px, 4vw, 48px) !important;
-}
-
-.lite-home .premium-photo-grid {
-  display: grid !important;
-  grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
-  gap: 18px !important;
-}
-
-.lite-home .premium-photo-card,
-.lite-home .premium-photo-card:first-child {
-  grid-column: auto !important;
-  min-height: auto !important;
-  height: auto !important;
+.lite-home .stable-gallery-card {
+  position: relative;
+  display: block;
+  min-width: 0;
+  margin: 0;
+  overflow: hidden;
+  border-radius: 26px;
   aspect-ratio: 4 / 3;
-  border-radius: 24px !important;
-  margin: 0 !important;
   background: #eef7ff;
-  box-shadow: 0 16px 44px rgba(8, 34, 60, 0.1) !important;
+  border: 1px solid rgba(8, 119, 223, 0.12);
+  box-shadow: 0 18px 48px rgba(8, 34, 60, 0.1);
+  contain: layout paint style;
 }
 
-.lite-home .premium-photo-card img {
-  width: 100% !important;
-  height: 100% !important;
-  object-fit: cover !important;
+.lite-home .stable-gallery-card:first-child {
+  grid-column: span 2;
+  grid-row: span 2;
 }
 
-.lite-home .premium-photo-card figcaption {
-  left: 16px !important;
-  right: 16px !important;
-  bottom: 16px !important;
+.lite-home .stable-gallery-card img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
-.lite-home .premium-photo-card figcaption small {
-  display: none !important;
+.lite-home .stable-gallery-card::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, transparent 35%, rgba(3, 21, 42, 0.82));
+}
+
+.lite-home .stable-gallery-card figcaption {
+  position: absolute;
+  z-index: 1;
+  left: 18px;
+  right: 18px;
+  bottom: 18px;
+  color: #fff;
+}
+
+.lite-home .stable-gallery-card figcaption span {
+  display: inline-flex;
+  margin-bottom: 8px;
+  padding: 7px 10px;
+  border-radius: 999px;
+  background: rgba(8, 119, 223, 0.38);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  font-size: 11px;
+  font-weight: 950;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #e8f6ff;
+}
+
+.lite-home .stable-gallery-card figcaption b {
+  display: block;
+  color: #fff;
+  font-size: clamp(19px, 2vw, 26px);
+  line-height: 1.05;
+}
+
+.lite-home .stable-gallery-card figcaption small {
+  display: block;
+  margin-top: 6px;
+  color: rgba(232, 246, 255, 0.82);
+  font-weight: 700;
+  line-height: 1.4;
+}
+
+@media (hover: hover) {
+  .lite-home .stable-gallery-card img {
+    transition: transform 240ms ease;
+  }
+
+  .lite-home .stable-gallery-card:hover img {
+    transform: scale(1.04);
+  }
 }
 
 @media (max-width: 900px) {
-  .lite-home .premium-photo-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  .lite-home .stable-gallery-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .lite-home .stable-gallery-card:first-child {
+    grid-column: 1 / -1;
+    grid-row: auto;
+    aspect-ratio: 16 / 10;
   }
 }
 
@@ -150,28 +181,29 @@
     height: min(96%, 390px);
   }
 
-  .lite-home .premium-gallery-title {
-    text-align: left !important;
+  .lite-home .stable-gallery-section {
+    padding-inline: 18px !important;
   }
 
-  .lite-home .premium-photo-feature {
-    aspect-ratio: 4 / 5;
-    border-radius: 22px !important;
+  .lite-home .stable-gallery-title {
+    text-align: left;
+    margin-bottom: 20px !important;
   }
 
-  .lite-home .premium-photo-grid {
-    grid-template-columns: 1fr !important;
-    gap: 14px !important;
+  .lite-home .stable-gallery-grid {
+    grid-template-columns: 1fr;
+    gap: 14px;
   }
 
-  .lite-home .premium-photo-card {
+  .lite-home .stable-gallery-card,
+  .lite-home .stable-gallery-card:first-child {
+    grid-column: auto;
     aspect-ratio: 16 / 10;
-    border-radius: 20px !important;
+    border-radius: 20px;
   }
 
-  .lite-home .premium-photo-copy p,
-  .lite-home .premium-photo-meta {
-    display: none !important;
+  .lite-home .stable-gallery-card figcaption small {
+    display: none;
   }
 }
 
