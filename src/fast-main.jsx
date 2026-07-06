@@ -38,128 +38,6 @@ const qualityPoints = [
   'Private owner login for clinic records and reports'
 ];
 
-const stablePhotoCss = `
-#gallery.photo-wall-section {
-  position: relative;
-  max-width: 1180px;
-  margin-inline: auto;
-  overflow: hidden;
-}
-#gallery .photo-wall-heading {
-  text-align: center;
-  max-width: 760px;
-  margin: 0 auto 30px;
-}
-#gallery .photo-wall-heading span {
-  display: inline-flex;
-  margin-bottom: 10px;
-  padding: 8px 14px;
-  border-radius: 999px;
-  background: #eef7ff;
-  color: #0877df;
-  font-size: 12px;
-  font-weight: 950;
-  letter-spacing: .1em;
-  text-transform: uppercase;
-}
-#gallery .photo-wall-heading h2 {
-  margin: 0;
-  color: #062849;
-  font-size: clamp(32px, 5vw, 56px);
-  line-height: .98;
-  letter-spacing: -.045em;
-}
-#gallery .photo-wall-heading p {
-  margin: 14px auto 0;
-  color: #5e7186;
-  line-height: 1.7;
-  font-weight: 650;
-}
-#gallery .photo-wall-grid {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 18px;
-  width: 100%;
-}
-#gallery .photo-wall-card {
-  position: relative;
-  display: block;
-  min-width: 0;
-  margin: 0;
-  overflow: hidden;
-  border-radius: 26px;
-  aspect-ratio: 4 / 3;
-  background: #eef7ff;
-  border: 1px solid rgba(8, 119, 223, .12);
-  box-shadow: 0 18px 48px rgba(8, 34, 60, .1);
-  contain: layout paint style;
-}
-#gallery .photo-wall-card:first-child {
-  grid-column: span 2;
-  grid-row: span 2;
-}
-#gallery .photo-wall-card img {
-  display: block;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-#gallery .photo-wall-card::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(180deg, transparent 35%, rgba(3, 21, 42, .82));
-}
-#gallery .photo-wall-caption {
-  position: absolute;
-  z-index: 1;
-  left: 18px;
-  right: 18px;
-  bottom: 18px;
-  color: #fff;
-}
-#gallery .photo-wall-caption span {
-  display: inline-flex;
-  margin-bottom: 8px;
-  padding: 7px 10px;
-  border-radius: 999px;
-  background: rgba(8, 119, 223, .38);
-  border: 1px solid rgba(255, 255, 255, .18);
-  font-size: 11px;
-  font-weight: 950;
-  letter-spacing: .08em;
-  text-transform: uppercase;
-}
-#gallery .photo-wall-caption b {
-  display: block;
-  color: #fff;
-  font-size: clamp(19px, 2vw, 26px);
-  line-height: 1.05;
-}
-#gallery .photo-wall-caption small {
-  display: block;
-  margin-top: 6px;
-  color: rgba(232, 246, 255, .82);
-  font-weight: 700;
-  line-height: 1.4;
-}
-@media (hover: hover) {
-  #gallery .photo-wall-card img { transition: transform .24s ease; }
-  #gallery .photo-wall-card:hover img { transform: scale(1.04); }
-}
-@media (max-width: 900px) {
-  #gallery .photo-wall-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  #gallery .photo-wall-card:first-child { grid-column: 1 / -1; grid-row: auto; aspect-ratio: 16 / 10; }
-}
-@media (max-width: 620px) {
-  #gallery.photo-wall-section { padding-inline: 18px !important; }
-  #gallery .photo-wall-heading { text-align: left; margin-bottom: 20px; }
-  #gallery .photo-wall-grid { grid-template-columns: 1fr; gap: 14px; }
-  #gallery .photo-wall-card, #gallery .photo-wall-card:first-child { grid-column: auto; aspect-ratio: 16 / 10; border-radius: 20px; }
-  #gallery .photo-wall-caption small { display: none; }
-}
-`;
-
 function loadScript(src) {
   return new Promise((resolve) => {
     if (document.querySelector(`script[src^="${src.split('?')[0]}"]`)) {
@@ -472,17 +350,17 @@ function Quality() {
 
 function Gallery() {
   return (
-    <section id="gallery" className="section photo-wall-section">
-      <div className="photo-wall-heading">
+    <section id="gallery" className="section stable-gallery-section">
+      <div className="section-title stable-gallery-title">
         <span>Photos</span>
         <h2>A premium look into the clinic experience.</h2>
-        <p>Clean spaces, careful equipment flow and patient-friendly rooms presented in a stable premium grid.</p>
+        <p>Clean spaces, careful equipment flow and patient-friendly rooms in a simple stable gallery.</p>
       </div>
-      <div className="photo-wall-grid">
+      <div className="stable-gallery-grid">
         {gallery.map((g, index) => (
-          <figure className="photo-wall-card" key={g.title}>
-            <img src={g.img} alt={g.title} width="900" height="650" loading={index === 0 ? 'eager' : 'lazy'} decoding="async" />
-            <figcaption className="photo-wall-caption">
+          <figure className="stable-gallery-card" key={g.title}>
+            <img src={g.img} alt={g.title} width="900" height="650" loading={index < 2 ? 'eager' : 'lazy'} decoding="async" />
+            <figcaption>
               <span>{g.tag}</span>
               <b>{g.title}</b>
               <small>{g.desc}</small>
@@ -583,7 +461,6 @@ function FastApp() {
 
   return (
     <>
-      <style>{stablePhotoCss}</style>
       <Header onOpenPortal={openPortal} />
       <main className="lite-home"><Hero onOpenPortal={openPortal} /><TrustStrip /><Services /><Quality /><Gallery /><Reviews /><Appointment /></main>
       <Footer />
