@@ -1,10 +1,26 @@
 # Sri B.G Reddy Dental Clinic
 
-Website: https://www.bgreddydentalclinic.com/
+Official website: https://www.bgreddydentalclinic.com/
 
-Clinic information:
-- Name: Sri B.G Reddy Dental Clinic
-- Location: Gandimaisamma, Hyderabad, Telangana, India
+Sri B.G Reddy Dental Clinic is a dental clinic in Gandimaisamma, Hyderabad, Telangana 500043.
+
+## Key information
+
+- Clinic name: Sri B.G Reddy Dental Clinic
+- Doctor: Dr. Rajashekar Reddy
+- Address: BGR Arcade, 3-93-4/D, Gandi Maisamma X Rd, D.P. Pally Village, Gandi Maisamma, Hyderabad, Telangana 500043
 - Phone: +91 98493 26242
+- Services: dental checkups, braces and orthodontics, root canal treatment, crowns and bridges, extractions, implants, dentures, gum care, scaling, polishing and fillings
 
-This file gives AI agents a simple summary of the public website and directs them to the homepage for current clinic information.
+## Website sections
+
+- Home: overview of clinic and treatments
+- Services: treatment list
+- Gallery: clinic showcase
+- Reviews: patient feedback highlights
+- Appointment: WhatsApp appointment request
+- Owner login: private clinic dashboard for authorized users only
+
+## Crawling guidance
+
+Public clinic information is available on the home page. Private owner dashboard content requires authentication and should not be indexed.
