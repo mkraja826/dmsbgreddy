@@ -13,12 +13,12 @@ const reviews = [
 ];
 
 const gallery = [
-  { img: '/gallery/gallery-1.svg', title: 'Clinic entrance', tag: 'Welcome area', desc: 'A calm first impression for every patient visit.' },
-  { img: '/gallery/gallery-2.svg', title: 'Treatment room', tag: 'Treatment space', desc: 'A clean clinical room planned for comfortable dental care.' },
-  { img: '/gallery/gallery-3.svg', title: 'Dental equipment', tag: 'Modern setup', desc: 'Equipment-focused care for diagnosis and precise treatment.' },
-  { img: '/gallery/gallery-4.svg', title: 'Sterilization care', tag: 'Hygiene flow', desc: 'Sterilization-first workflow for safer appointments.' },
-  { img: '/gallery/gallery-5.svg', title: 'Reception', tag: 'Patient support', desc: 'Organized reception flow for smoother appointment handling.' },
-  { img: '/gallery/gallery-6.svg', title: 'Smile care', tag: 'Smile results', desc: 'Focused treatment planning for healthy, confident smiles.' }
+  { img: '/gallery/gallery-1.svg', title: 'Clinic entrance' },
+  { img: '/gallery/gallery-2.svg', title: 'Treatment room' },
+  { img: '/gallery/gallery-3.svg', title: 'Dental equipment' },
+  { img: '/gallery/gallery-4.svg', title: 'Sterilization care' },
+  { img: '/gallery/gallery-5.svg', title: 'Reception' },
+  { img: '/gallery/gallery-6.svg', title: 'Smile care' }
 ];
 
 const serviceHighlights = [
@@ -350,21 +350,13 @@ function Quality() {
 
 function Gallery() {
   return (
-    <section id="gallery" className="section stable-gallery-section">
-      <div className="section-title stable-gallery-title">
-        <span>Photos</span>
-        <h2>A premium look into the clinic experience.</h2>
-        <p>Clean spaces, careful equipment flow and patient-friendly rooms in a simple stable gallery.</p>
-      </div>
-      <div className="stable-gallery-grid">
+    <section id="gallery" className="section">
+      <div className="section-title"><span>Photos</span><h2>A look inside the clinic experience.</h2><p>Clinic, equipment and patient-care spaces presented in a simple fast gallery.</p></div>
+      <div className="gallery-scroll">
         {gallery.map((g, index) => (
-          <figure className="stable-gallery-card" key={g.title}>
+          <figure key={g.title}>
             <img src={g.img} alt={g.title} width="900" height="650" loading={index < 2 ? 'eager' : 'lazy'} decoding="async" />
-            <figcaption>
-              <span>{g.tag}</span>
-              <b>{g.title}</b>
-              <small>{g.desc}</small>
-            </figcaption>
+            <figcaption>{g.title}</figcaption>
           </figure>
         ))}
       </div>
