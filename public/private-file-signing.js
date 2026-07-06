@@ -5,6 +5,7 @@
   const SESSION_KEY = 'bg_reddy_dms_owner_session_v3';
   const URL_CACHE = new Map();
   const SIGNING_MARK = 'dmsPrivateSigningSource';
+  let initialized = false;
 
   function readSession() {
     try {
@@ -168,8 +169,16 @@
     }
   });
 
-  window.addEventListener('load', () => {
+  function init() {
+    if (initialized) return;
+    initialized = true;
     signVisibleStorageUrls();
-    observer.observe(document.body, { childList: true, subtree: true });
-  });
+    if (document.body) observer.observe(document.body, { childList: true, subtree: true });
+  }
+
+  if (document.readyState === 'loading') {
+    window.addEventListener('load', init, { once: true });
+  } else {
+    init();
+  }
 })();
