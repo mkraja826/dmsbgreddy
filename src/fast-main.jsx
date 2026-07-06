@@ -13,12 +13,12 @@ const reviews = [
 ];
 
 const gallery = [
-  { img: '/gallery/gallery-1.svg', title: 'Clinic entrance' },
-  { img: '/gallery/gallery-2.svg', title: 'Treatment room' },
-  { img: '/gallery/gallery-3.svg', title: 'Dental equipment' },
-  { img: '/gallery/gallery-4.svg', title: 'Sterilization care' },
-  { img: '/gallery/gallery-5.svg', title: 'Reception' },
-  { img: '/gallery/gallery-6.svg', title: 'Smile care' }
+  { img: '/gallery/gallery-1.svg', title: 'Clinic entrance', tag: 'Welcome area', desc: 'A calm first impression for every patient visit.' },
+  { img: '/gallery/gallery-2.svg', title: 'Treatment room', tag: 'Treatment space', desc: 'A clean clinical room planned for comfortable dental care.' },
+  { img: '/gallery/gallery-3.svg', title: 'Dental equipment', tag: 'Modern setup', desc: 'Equipment-focused care for diagnosis and precise treatment.' },
+  { img: '/gallery/gallery-4.svg', title: 'Sterilization care', tag: 'Hygiene flow', desc: 'Sterilization-first workflow for safer appointments.' },
+  { img: '/gallery/gallery-5.svg', title: 'Reception', tag: 'Patient support', desc: 'Organized reception flow for smoother appointment handling.' },
+  { img: '/gallery/gallery-6.svg', title: 'Smile care', tag: 'Smile results', desc: 'Focused treatment planning for healthy, confident smiles.' }
 ];
 
 const serviceHighlights = [
@@ -189,16 +189,45 @@ function Quality() {
 }
 
 function Gallery() {
+  const [featured, ...rest] = gallery;
+
   return (
-    <section id="gallery" className="section">
-      <div className="section-title"><span>Gallery</span><h2>A sharper clinic showcase for patients.</h2><p>Prepared for real clinic, equipment and treatment room photos while keeping a fast gallery flow.</p></div>
-      <div className="gallery-scroll">
-        {gallery.map((g, index) => (
-          <figure key={g.title}>
-            <img src={g.img} alt={g.title} width="900" height="650" loading={index === 0 ? 'eager' : 'lazy'} decoding="async" />
-            <figcaption>{g.title}</figcaption>
-          </figure>
-        ))}
+    <section id="gallery" className="section premium-gallery-section">
+      <div className="section-title premium-gallery-title">
+        <span>Photos</span>
+        <h2>A premium look into the clinic experience.</h2>
+        <p>Clean spaces, careful equipment flow and patient-friendly rooms presented with a sharper visual gallery.</p>
+      </div>
+
+      <div className="premium-gallery-shell">
+        <article className="premium-photo-feature">
+          <img src={featured.img} alt={featured.title} width="900" height="650" loading="eager" decoding="async" />
+          <div className="premium-photo-gradient"></div>
+          <div className="premium-photo-copy">
+            <span>{featured.tag}</span>
+            <h3>{featured.title}</h3>
+            <p>{featured.desc}</p>
+            <div className="premium-photo-meta">
+              <b>Modern setup</b>
+              <b>Clean clinical flow</b>
+              <b>Patient-first care</b>
+            </div>
+          </div>
+        </article>
+
+        <div className="premium-photo-grid">
+          {rest.map((g, index) => (
+            <figure className="premium-photo-card" key={g.title}>
+              <img src={g.img} alt={g.title} width="900" height="650" loading="lazy" decoding="async" />
+              <figcaption>
+                <span>{g.tag}</span>
+                <b>{g.title}</b>
+                <small>{g.desc}</small>
+              </figcaption>
+              <i aria-hidden="true">↗</i>
+            </figure>
+          ))}
+        </div>
       </div>
     </section>
   );
