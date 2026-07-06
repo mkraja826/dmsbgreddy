@@ -62,10 +62,116 @@
   opacity: 1 !important;
 }
 
+/* Stable premium Photos section. This overrides the earlier experimental split layout. */
+.lite-home .premium-gallery-section {
+  overflow: hidden !important;
+}
+
+.lite-home .premium-gallery-shell {
+  display: block !important;
+  width: 100%;
+}
+
+.lite-home .premium-photo-feature {
+  position: relative !important;
+  min-height: auto !important;
+  height: auto !important;
+  aspect-ratio: 16 / 9;
+  border-radius: 28px !important;
+  margin: 0 0 18px !important;
+  background: #eef7ff;
+  box-shadow: 0 24px 70px rgba(8, 34, 60, 0.13) !important;
+}
+
+.lite-home .premium-photo-feature img {
+  position: absolute !important;
+  inset: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: cover !important;
+}
+
+.lite-home .premium-photo-copy {
+  position: absolute !important;
+  left: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  max-width: 720px !important;
+  padding: clamp(20px, 4vw, 42px) !important;
+}
+
+.lite-home .premium-photo-copy h3 {
+  font-size: clamp(28px, 4vw, 48px) !important;
+}
+
+.lite-home .premium-photo-grid {
+  display: grid !important;
+  grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  gap: 18px !important;
+}
+
+.lite-home .premium-photo-card,
+.lite-home .premium-photo-card:first-child {
+  grid-column: auto !important;
+  min-height: auto !important;
+  height: auto !important;
+  aspect-ratio: 4 / 3;
+  border-radius: 24px !important;
+  margin: 0 !important;
+  background: #eef7ff;
+  box-shadow: 0 16px 44px rgba(8, 34, 60, 0.1) !important;
+}
+
+.lite-home .premium-photo-card img {
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: cover !important;
+}
+
+.lite-home .premium-photo-card figcaption {
+  left: 16px !important;
+  right: 16px !important;
+  bottom: 16px !important;
+}
+
+.lite-home .premium-photo-card figcaption small {
+  display: none !important;
+}
+
+@media (max-width: 900px) {
+  .lite-home .premium-photo-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+}
+
 @media (max-width: 620px) {
   .lite-home .molar-canvas.rotating-molar-canvas {
     width: min(96%, 420px);
     height: min(96%, 390px);
+  }
+
+  .lite-home .premium-gallery-title {
+    text-align: left !important;
+  }
+
+  .lite-home .premium-photo-feature {
+    aspect-ratio: 4 / 5;
+    border-radius: 22px !important;
+  }
+
+  .lite-home .premium-photo-grid {
+    grid-template-columns: 1fr !important;
+    gap: 14px !important;
+  }
+
+  .lite-home .premium-photo-card {
+    aspect-ratio: 16 / 10;
+    border-radius: 20px !important;
+  }
+
+  .lite-home .premium-photo-copy p,
+  .lite-home .premium-photo-meta {
+    display: none !important;
   }
 }
 
