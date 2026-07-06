@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import './styles.css';
 
@@ -54,8 +54,20 @@ function loadScript(src) {
   });
 }
 
-function FastLogo() {
-  return <span className="fast-logo" aria-hidden="true">BG</span>;
+function ClinicLogo({ large = false }) {
+  const size = large ? 72 : 48;
+  return (
+    <img
+      className={`logo-img real-clinic-logo${large ? ' large' : ''}`}
+      src="/assets/logo-icon.png"
+      alt=""
+      aria-hidden="true"
+      width={size}
+      height={size}
+      decoding="async"
+      loading="eager"
+    />
+  );
 }
 
 function MolarFallback() {
@@ -83,6 +95,156 @@ function MolarFallback() {
   );
 }
 
+function RotatingMolar() {
+  const mountRef = useRef(null);
+  const [loaded, setLoaded] = useState(false);
+
+  useEffect(() => {
+    const mount = mountRef.current;
+    if (!mount) return undefined;
+
+    const reduceMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+    if (reduceMotion) return undefined;
+
+    let cancelled = false;
+    let started = false;
+    let frameId = 0;
+    let renderer;
+    let model;
+    let scene;
+    let camera;
+    let resizeObserver;
+
+    const disposeObject = (object) => {
+      object?.traverse?.((child) => {
+        child.geometry?.dispose?.();
+        if (Array.isArray(child.material)) child.material.forEach((material) => material?.dispose?.());
+        else child.material?.dispose?.();
+      });
+    };
+
+    const start = async () => {
+      if (started || cancelled) return;
+      started = true;
+
+      await new Promise((resolve) => {
+        if ('requestIdleCallback' in window) window.requestIdleCallback(resolve, { timeout: 1800 });
+        else window.setTimeout(resolve, 700);
+      });
+
+      if (cancelled || !mount.isConnected) return;
+
+      try {
+        const THREE = await import('three');
+        const { GLTFLoader } = await import('three/examples/jsm/loaders/GLTFLoader.js');
+
+        if (cancelled || !mount.isConnected) return;
+
+        const width = Math.max(280, mount.clientWidth || 420);
+        const height = Math.max(280, mount.clientHeight || 420);
+
+        renderer = new THREE.WebGLRenderer({ alpha: true, antialias: false, powerPreference: 'low-power' });
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.35));
+        renderer.setSize(width, height, false);
+        renderer.outputColorSpace = THREE.SRGBColorSpace;
+        renderer.domElement.setAttribute('aria-hidden', 'true');
+        mount.innerHTML = '';
+        mount.appendChild(renderer.domElement);
+
+        scene = new THREE.Scene();
+        camera = new THREE.PerspectiveCamera(34, width / height, 0.1, 100);
+        camera.position.set(0, 0.1, 4.2);
+
+        const keyLight = new THREE.DirectionalLight(0xffffff, 2.3);
+        keyLight.position.set(2.6, 3.2, 4.6);
+        scene.add(keyLight);
+        scene.add(new THREE.AmbientLight(0xdff4ff, 1.35));
+
+        const loader = new GLTFLoader();
+        loader.load('/assets/dent-molaire-hero.glb?v=100kb', (gltf) => {
+          if (cancelled) return;
+
+          model = gltf.scene;
+          model.traverse((child) => {
+            if (child.isMesh) {
+              child.frustumCulled = true;
+              child.material = new THREE.MeshStandardMaterial({
+                color: 0xf7fcff,
+                roughness: 0.25,
+                metalness: 0.02,
+                emissive: 0x08223c,
+                emissiveIntensity: 0.015
+              });
+            }
+          });
+
+          const box = new THREE.Box3().setFromObject(model);
+          const center = box.getCenter(new THREE.Vector3());
+          const size = box.getSize(new THREE.Vector3());
+          const maxAxis = Math.max(size.x, size.y, size.z) || 1;
+          model.position.sub(center);
+          model.scale.setScalar(2.35 / maxAxis);
+          model.rotation.x = -0.08;
+          scene.add(model);
+          setLoaded(true);
+
+          const render = () => {
+            if (cancelled) return;
+            if (!document.hidden && model) model.rotation.y += 0.008;
+            renderer.render(scene, camera);
+            frameId = window.requestAnimationFrame(render);
+          };
+
+          render();
+        }, undefined, () => {
+          setLoaded(false);
+        });
+
+        resizeObserver = new ResizeObserver(() => {
+          if (!renderer || !camera || !mount.clientWidth || !mount.clientHeight) return;
+          const nextWidth = Math.max(280, mount.clientWidth);
+          const nextHeight = Math.max(280, mount.clientHeight);
+          renderer.setSize(nextWidth, nextHeight, false);
+          camera.aspect = nextWidth / nextHeight;
+          camera.updateProjectionMatrix();
+        });
+        resizeObserver.observe(mount);
+      } catch {
+        setLoaded(false);
+      }
+    };
+
+    const observer = 'IntersectionObserver' in window
+      ? new IntersectionObserver((entries) => {
+          if (entries.some((entry) => entry.isIntersecting)) {
+            observer.disconnect();
+            start();
+          }
+        }, { rootMargin: '220px 0px' })
+      : null;
+
+    if (observer) observer.observe(mount);
+    else start();
+
+    return () => {
+      cancelled = true;
+      observer?.disconnect();
+      resizeObserver?.disconnect?.();
+      if (frameId) window.cancelAnimationFrame(frameId);
+      disposeObject(model);
+      renderer?.dispose?.();
+      if (mount) mount.innerHTML = '';
+    };
+  }, []);
+
+  return (
+    <div className={`molar-model-wrap fast-rotating-molar ${loaded ? 'is-loaded' : 'is-failed'}`}>
+      <div ref={mountRef} className="molar-canvas rotating-molar-canvas" aria-hidden="true"></div>
+      <div className="molar-model-fallback"><MolarFallback /></div>
+    </div>
+  );
+}
+
 function Header({ onOpenPortal }) {
   const [open, setOpen] = useState(false);
   const nav = ['services', 'quality', 'gallery', 'reviews', 'appointment'];
@@ -95,7 +257,7 @@ function Header({ onOpenPortal }) {
     <header className="topbar">
       <div className="nav-shell">
         <button className="brand" onClick={() => go('home')} aria-label="Sri B.G Reddy Dental Clinic home">
-          <FastLogo />
+          <ClinicLogo />
           <span><b>BG Reddy</b><small>Dental Clinic</small></span>
         </button>
 
@@ -129,12 +291,10 @@ function Hero({ onOpenPortal }) {
           </div>
         </div>
 
-        <div className="hero-visual" aria-label="Dental clinic visual">
+        <div className="hero-visual" aria-label="Rotating 3D dental molar visual">
           <div className="dental-stage fast-dental-stage">
             <div className="stage-grid"></div>
-            <div className="molar-model-wrap is-failed">
-              <div className="molar-model-fallback"><MolarFallback /></div>
-            </div>
+            <RotatingMolar />
           </div>
         </div>
       </div>
@@ -178,7 +338,7 @@ function Quality() {
         <div className="device-card">
           <div className="device-top"><span></span><span></span><span></span></div>
           <div className="device-body">
-            <FastLogo />
+            <ClinicLogo large />
             <h3>Clean clinic systems</h3>
             <p>A calm setup built for focused diagnosis, treatment planning and comfortable visits.</p>
           </div>
@@ -216,7 +376,7 @@ function Gallery() {
         </article>
 
         <div className="premium-photo-grid">
-          {rest.map((g, index) => (
+          {rest.map((g) => (
             <figure className="premium-photo-card" key={g.title}>
               <img src={g.img} alt={g.title} width="900" height="650" loading="lazy" decoding="async" />
               <figcaption>
@@ -284,7 +444,7 @@ function Appointment() {
 function Footer() {
   return (
     <footer className="footer">
-      <div><FastLogo /><b>Sri B.G Reddy Dental Clinic</b><p>Modern dental care in Gandimaisamma.</p></div>
+      <div><ClinicLogo large /><b>Sri B.G Reddy Dental Clinic</b><p>Modern dental care in Gandimaisamma.</p></div>
       <a href={mapsUrl} target="_blank" rel="noreferrer">Open Google Maps</a>
     </footer>
   );
