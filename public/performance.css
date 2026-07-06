@@ -8,6 +8,7 @@
 .gallery-scroll img,
 .molar-canvas canvas {
   content-visibility: auto;
+  contain-intrinsic-size: 320px 240px;
 }
 
 .topbar,
@@ -43,6 +44,77 @@
   background: #eef7ff;
 }
 
+.sr-only {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  padding: 0 !important;
+  margin: -1px !important;
+  overflow: hidden !important;
+  clip: rect(0, 0, 0, 0) !important;
+  white-space: nowrap !important;
+  border: 0 !important;
+}
+
+.fast-logo {
+  width: 48px;
+  height: 48px;
+  flex: 0 0 48px;
+  display: inline-grid;
+  place-items: center;
+  border-radius: 14px;
+  background: linear-gradient(145deg, #0877df, #0b8af0);
+  color: #fff;
+  font-weight: 1000;
+  letter-spacing: -0.04em;
+  box-shadow: 0 10px 24px rgba(8, 119, 223, 0.16);
+}
+
+.device-body .fast-logo,
+.footer .fast-logo {
+  width: 72px;
+  height: 72px;
+  margin: auto;
+  font-size: 22px;
+  background: #fff;
+  color: #0877df;
+}
+
+.lite-home .fast-dental-stage,
+.lite-home .dental-stage {
+  transform: none !important;
+  min-height: 440px;
+}
+
+.lite-home .orbit-ring,
+.lite-home .stage-shine,
+.lite-home .molar-canvas,
+.lite-home .tooth-model,
+.lite-home .tooth-shadow,
+.lite-home .tooth-blue-arc,
+.lite-home .molar-blue-mark {
+  animation: none !important;
+}
+
+.lite-home .molar-model-wrap,
+.lite-home .molar-model-fallback {
+  opacity: 1 !important;
+}
+
+.lite-home .molar-canvas {
+  display: none !important;
+}
+
+.lite-home .hero,
+.lite-home .dental-stage,
+.lite-home .gallery-scroll figure,
+.lite-home .service-card,
+.lite-home .review,
+.lite-home .appointment-card {
+  content-visibility: auto;
+  contain-intrinsic-size: 520px 420px;
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
@@ -61,5 +133,10 @@
 
   .dental-stage {
     transform: none !important;
+  }
+
+  .lite-home .fast-dental-stage,
+  .lite-home .dental-stage {
+    min-height: 340px;
   }
 }
