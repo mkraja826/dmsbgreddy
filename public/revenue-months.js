@@ -25,10 +25,8 @@
   function target() {
     const shell = document.querySelector('.portal-shell');
     if (!shell) return null;
-
     const loggedInDashboard = shell.querySelector('.portal-tabs, .control-panel-grid, .dashboard-grid');
     if (!loggedInDashboard) return null;
-
     return shell;
   }
 
@@ -39,18 +37,15 @@
   function ensureBox() {
     const shell = target();
     if (!shell) return null;
-
     let box = document.getElementById(boxId);
     if (!box) {
       box = document.createElement('section');
       box.id = boxId;
     }
-
     if (box.parentElement !== shell) {
       const before = anchor();
       shell.insertBefore(box, before || null);
     }
-
     box.style.cssText = 'width:100%;box-sizing:border-box;border-radius:28px;padding:24px;background:linear-gradient(135deg,#052a5c,#0877df);color:white;box-shadow:0 22px 60px rgba(5,58,121,.22);margin:18px 0 20px;position:relative;z-index:1';
     return box;
   }
@@ -76,15 +71,12 @@
       ensureBox();
       return;
     }
-
     const box = ensureBox();
     if (!box) return;
-
     busy = true;
     lastLoadAt = now;
     const month = currentMonth();
     paint(box, month, { total: 0, count: 0, avg: 0, best: 0 }, 'Loading revenue...');
-
     try {
       const c = readConfig();
       const s = readSession();
@@ -98,9 +90,7 @@
     }
   }
 
-  function scheduleLoad(force = false) {
-    window.requestAnimationFrame(() => load(force));
-  }
+  function scheduleLoad(force = false) { window.requestAnimationFrame(() => load(force)); }
 
   document.addEventListener('click', (e) => {
     const b = e.target.closest('#' + boxId + ' [data-month-revenue]');
@@ -110,17 +100,13 @@
       scheduleLoad(true);
       return;
     }
-
     if (e.target.closest('.portal-tabs button, .portal-actions button, .control-card button, .shortcut-grid button')) {
       setTimeout(() => scheduleLoad(false), 80);
     }
   });
 
   window.addEventListener('focus', () => scheduleLoad(false));
-  document.addEventListener('visibilitychange', () => {
-    if (!document.hidden) scheduleLoad(false);
-  });
-
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) scheduleLoad(false); });
   const observer = new MutationObserver(() => scheduleLoad(false));
 
   function init() {
@@ -136,9 +122,84 @@
     }, 1500);
   }
 
-  if (document.readyState === 'loading') {
-    window.addEventListener('load', init, { once: true });
-  } else {
-    init();
+  if (document.readyState === 'loading') window.addEventListener('load', init, { once: true });
+  else init();
+})();
+
+(() => {
+  const PAGE_SIZE = 10;
+  let currentPage = 0;
+  let lastSignature = '';
+  let applying = false;
+
+  function directoryCard() {
+    return Array.from(document.querySelectorAll('.portal-card.full-card')).find((card) => {
+      const title = card.querySelector('.card-title h3')?.textContent?.trim().toLowerCase() || '';
+      return title === 'patient directory';
+    });
   }
+
+  function pillButton(label, disabled, onClick) {
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.textContent = label;
+    button.disabled = disabled;
+    button.style.cssText = 'border:1px solid #d8e7f3;border-radius:999px;padding:8px 12px;font-weight:800;background:' + (disabled ? '#f4f8fb' : '#fff') + ';color:' + (disabled ? '#94a3b8' : '#064e7a') + ';cursor:' + (disabled ? 'not-allowed' : 'pointer');
+    button.addEventListener('click', onClick);
+    return button;
+  }
+
+  function applyPatientPagination() {
+    if (applying) return;
+    const card = directoryCard();
+    const list = card?.querySelector('.table-list');
+    if (!card || !list) return;
+
+    const rows = Array.from(list.querySelectorAll('.patient-row'));
+    const old = card.querySelector('.patient-pagination');
+    if (!rows.length) {
+      old?.remove();
+      return;
+    }
+
+    const signature = rows.map((row) => row.textContent?.slice(0, 100) || '').join('|');
+    if (signature !== lastSignature) {
+      currentPage = 0;
+      lastSignature = signature;
+    }
+
+    const totalPages = Math.max(1, Math.ceil(rows.length / PAGE_SIZE));
+    currentPage = Math.min(currentPage, totalPages - 1);
+    const start = currentPage * PAGE_SIZE;
+    const end = start + PAGE_SIZE;
+
+    rows.forEach((row, index) => {
+      row.style.display = index >= start && index < end ? '' : 'none';
+    });
+
+    applying = true;
+    old?.remove();
+    const controls = document.createElement('div');
+    controls.className = 'patient-pagination';
+    controls.style.cssText = 'display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-top:14px;padding:12px;border:1px solid #e3edf5;border-radius:16px;background:#f8fbfe';
+    const info = document.createElement('span');
+    info.textContent = 'Showing ' + (start + 1) + '-' + Math.min(end, rows.length) + ' of ' + rows.length + ' patients';
+    info.style.cssText = 'color:#476579;font-weight:800;font-size:13px';
+    const actions = document.createElement('div');
+    actions.style.cssText = 'display:flex;gap:8px';
+    actions.append(
+      pillButton('Previous', currentPage === 0, () => { currentPage = Math.max(0, currentPage - 1); applyPatientPagination(); card.scrollIntoView({ behavior: 'smooth', block: 'start' }); }),
+      pillButton('Next', currentPage >= totalPages - 1, () => { currentPage = Math.min(totalPages - 1, currentPage + 1); applyPatientPagination(); card.scrollIntoView({ behavior: 'smooth', block: 'start' }); })
+    );
+    controls.append(info, actions);
+    list.after(controls);
+    applying = false;
+  }
+
+  const observer = new MutationObserver(() => window.requestAnimationFrame(applyPatientPagination));
+  if (document.body) observer.observe(document.body, { childList: true, subtree: true, characterData: true });
+  document.addEventListener('click', (event) => {
+    if (event.target.closest('.portal-tabs button, .portal-search button')) setTimeout(applyPatientPagination, 180);
+  });
+  window.setInterval(applyPatientPagination, 1000);
 })();
