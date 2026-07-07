@@ -2,249 +2,41 @@
 // from CSV and JSON downloads created in the clinic dashboard.
 (() => {
   const NativeBlob = window.Blob;
-
-  const blockedExact = new Set([
-    'id',
-    'clinic_id',
-    'patient_id',
-    'doctor_id',
-    'visit_id',
-    'file_id',
-    'invoice_id',
-    'payment_id',
-    'appointment_id',
-    'profile_id',
-    'staff_id',
-    'owner_id',
-    'uploaded_by',
-    'collected_by',
-    'created_by',
-    'updated_by',
-    'deleted_by',
-  ]);
-
-  const blockedPatterns = [
-    /(^|_)uuid$/i,
-    /(^|_)token$/i,
-    /(^|_)session$/i,
-    /(^|_)access_token$/i,
-    /(^|_)refresh_token$/i,
-    /(^|_)password$/i,
-    /(^|_)clinic_ref$/i,
-  ];
-
-  const headerLabels = {
-    patient_code: 'Patient ID',
-    patient_name: 'Patient Name',
-    patient_phone: 'Phone Number',
-    name: 'Name',
-    phone: 'Phone Number',
-    age: 'Age',
-    gender: 'Gender',
-    email: 'Email',
-    visit_date: 'Visit Date',
-    chief_complaint: 'Chief Complaint',
-    diagnosis: 'Diagnosis',
-    notes: 'Notes',
-    treatment: 'Treatment',
-    next_appointment_date: 'Next Follow-up',
-    doctor_name: 'Doctor',
-    doctor_role: 'Doctor Role',
-    uploaded_by_name: 'Uploaded By',
-    uploaded_by_role: 'Uploader Role',
-    file_type: 'File Type',
-    file_name: 'File Name',
-    file_url: 'File Link',
-    amount: 'Amount',
-    payment_method: 'Payment Method',
-    payment_category: 'Payment Category',
-    total_amount: 'Total Amount',
-    paid_amount: 'Paid Amount',
-    due_amount: 'Due Amount',
-    invoice_type: 'Invoice Type',
-    status: 'Status',
-    appointment_time: 'Appointment Time',
-    role: 'Role',
-    active: 'Active',
-    invite_code: 'Invite Code',
-    accepted_at: 'Accepted At',
-    created_at: 'Created At',
-    updated_at: 'Updated At',
-    exported_at: 'Exported At',
-  };
-
-  function isBlockedKey(key) {
-    const normalized = String(key || '').trim();
-    const lower = normalized.toLowerCase();
-
-    if (lower === 'patient_code') return false;
-    if (blockedExact.has(lower)) return true;
-    if (/^[a-z_]*id$/i.test(lower) && lower !== 'patient_id_display' && lower !== 'patient_code') return true;
-
-    return blockedPatterns.some((pattern) => pattern.test(lower));
-  }
-
-  function looksLikeUuid(value) {
-    return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(String(value || '').trim());
-  }
-
-  function labelHeader(key) {
-    const lower = String(key || '').trim().toLowerCase();
-    if (headerLabels[lower]) return headerLabels[lower];
-    return String(key || '')
-      .replace(/_/g, ' ')
-      .replace(/\b\w/g, (letter) => letter.toUpperCase());
-  }
-
-  function parseCsvLine(line) {
-    const cells = [];
-    let current = '';
-    let quoted = false;
-
-    for (let i = 0; i < line.length; i += 1) {
-      const char = line[i];
-      const next = line[i + 1];
-
-      if (char === '"' && quoted && next === '"') {
-        current += '"';
-        i += 1;
-      } else if (char === '"') {
-        quoted = !quoted;
-      } else if (char === ',' && !quoted) {
-        cells.push(current);
-        current = '';
-      } else {
-        current += char;
-      }
-    }
-
-    cells.push(current);
-    return cells;
-  }
-
-  function csvEscape(value) {
-    const text = String(value ?? '').replace(/\r?\n|\r/g, ' ').trim();
-    if (/[",]/.test(text)) return `"${text.replace(/"/g, '""')}"`;
-    return text;
-  }
-
-  function sanitizeCsv(text) {
-    const rows = String(text || '').split(/\r?\n/).filter(Boolean);
-    if (rows.length < 2) return text;
-
-    const headers = parseCsvLine(rows[0]);
-    const keepIndexes = headers
-      .map((header, index) => ({ header, index }))
-      .filter(({ header }) => !isBlockedKey(header))
-      .map(({ index }) => index);
-
-    if (!keepIndexes.length || keepIndexes.length === headers.length) return text;
-
-    const nextRows = [keepIndexes.map((index) => csvEscape(labelHeader(headers[index]))).join(',')];
-
-    for (const row of rows.slice(1)) {
-      const cells = parseCsvLine(row);
-      nextRows.push(keepIndexes.map((index) => {
-        const value = cells[index] ?? '';
-        return csvEscape(looksLikeUuid(value) ? '' : value);
-      }).join(','));
-    }
-
-    return nextRows.join('\n');
-  }
-
-  function sanitizeJsonValue(value) {
-    if (Array.isArray(value)) return value.map(sanitizeJsonValue);
-    if (!value || typeof value !== 'object') return looksLikeUuid(value) ? '' : value;
-
-    const output = {};
-    for (const [key, child] of Object.entries(value)) {
-      if (isBlockedKey(key)) continue;
-      const cleanKey = headerLabels[key.toLowerCase()] || key;
-      output[cleanKey] = sanitizeJsonValue(child);
-    }
-    return output;
-  }
-
-  function sanitizeJson(text) {
-    try {
-      return JSON.stringify(sanitizeJsonValue(JSON.parse(text)), null, 2);
-    } catch {
-      return text;
-    }
-  }
-
-  window.Blob = function HumanReadableExportBlob(parts = [], options = {}) {
-    const type = String(options?.type || '').toLowerCase();
-
-    if (parts.length === 1 && typeof parts[0] === 'string') {
-      if (type.includes('text/csv')) return new NativeBlob([sanitizeCsv(parts[0])], options);
-      if (type.includes('application/json')) return new NativeBlob([sanitizeJson(parts[0])], options);
-    }
-
-    return new NativeBlob(parts, options);
-  };
-
+  const blockedExact = new Set(['id','clinic_id','patient_id','doctor_id','visit_id','file_id','invoice_id','payment_id','appointment_id','profile_id','staff_id','owner_id','uploaded_by','collected_by','created_by','updated_by','deleted_by']);
+  const headerLabels = { patient_code: 'Patient ID', patient_name: 'Patient Name', patient_phone: 'Phone Number', name: 'Name', phone: 'Phone Number', age: 'Age', gender: 'Gender', email: 'Email', visit_date: 'Visit Date', chief_complaint: 'Chief Complaint', diagnosis: 'Diagnosis', notes: 'Notes', treatment: 'Treatment', next_appointment_date: 'Next Follow-up', doctor_name: 'Doctor', doctor_role: 'Doctor Role', uploaded_by_name: 'Uploaded By', uploaded_by_role: 'Uploader Role', file_type: 'File Type', file_name: 'File Name', file_url: 'File Link', amount: 'Amount', payment_method: 'Payment Method', payment_category: 'Payment Category', total_amount: 'Total Amount', paid_amount: 'Paid Amount', due_amount: 'Due Amount', invoice_type: 'Invoice Type', status: 'Status', appointment_time: 'Appointment Time', role: 'Role', active: 'Active', invite_code: 'Invite Code', accepted_at: 'Accepted At', created_at: 'Created At', updated_at: 'Updated At', exported_at: 'Exported At' };
+  function isBlockedKey(key) { const lower = String(key || '').trim().toLowerCase(); if (lower === 'patient_code') return false; if (blockedExact.has(lower)) return true; return /^[a-z_]*id$/i.test(lower) && lower !== 'patient_code'; }
+  function looksLikeUuid(value) { return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(String(value || '').trim()); }
+  function labelHeader(key) { const lower = String(key || '').trim().toLowerCase(); if (headerLabels[lower]) return headerLabels[lower]; return String(key || '').replace(/_/g, ' ').replace(/\b\w/g, (letter) => letter.toUpperCase()); }
+  function parseCsvLine(line) { const cells = []; let current = ''; let quoted = false; for (let i = 0; i < line.length; i += 1) { const char = line[i]; const next = line[i + 1]; if (char === '"' && quoted && next === '"') { current += '"'; i += 1; } else if (char === '"') { quoted = !quoted; } else if (char === ',' && !quoted) { cells.push(current); current = ''; } else { current += char; } } cells.push(current); return cells; }
+  function csvEscape(value) { const text = String(value ?? '').replace(/\r?\n|\r/g, ' ').trim(); if (/[",]/.test(text)) return `"${text.replace(/"/g, '""')}"`; return text; }
+  function sanitizeCsv(text) { const rows = String(text || '').split(/\r?\n/).filter(Boolean); if (rows.length < 2) return text; const headers = parseCsvLine(rows[0]); const keepIndexes = headers.map((header, index) => ({ header, index })).filter(({ header }) => !isBlockedKey(header)).map(({ index }) => index); if (!keepIndexes.length || keepIndexes.length === headers.length) return text; const nextRows = [keepIndexes.map((index) => csvEscape(labelHeader(headers[index]))).join(',')]; for (const row of rows.slice(1)) { const cells = parseCsvLine(row); nextRows.push(keepIndexes.map((index) => csvEscape(looksLikeUuid(cells[index]) ? '' : (cells[index] ?? ''))).join(',')); } return nextRows.join('\n'); }
+  function sanitizeJsonValue(value) { if (Array.isArray(value)) return value.map(sanitizeJsonValue); if (!value || typeof value !== 'object') return looksLikeUuid(value) ? '' : value; const output = {}; for (const [key, child] of Object.entries(value)) { if (isBlockedKey(key)) continue; output[headerLabels[key.toLowerCase()] || key] = sanitizeJsonValue(child); } return output; }
+  function sanitizeJson(text) { try { return JSON.stringify(sanitizeJsonValue(JSON.parse(text)), null, 2); } catch { return text; } }
+  window.Blob = function HumanReadableExportBlob(parts = [], options = {}) { const type = String(options?.type || '').toLowerCase(); if (parts.length === 1 && typeof parts[0] === 'string') { if (type.includes('text/csv')) return new NativeBlob([sanitizeCsv(parts[0])], options); if (type.includes('application/json')) return new NativeBlob([sanitizeJson(parts[0])], options); } return new NativeBlob(parts, options); };
   window.Blob.prototype = NativeBlob.prototype;
 })();
 
-// Frontend-only UX fix: when the owner opens a patient profile, bring the
-// profile card into view instead of leaving it somewhere lower on the page.
 (() => {
   let pendingProfileScroll = false;
   let lastProfileTitle = '';
-
-  function profilePanel() {
-    return document.querySelector('.patient-profile-panel');
-  }
-
-  function profileTitle(panel) {
-    const title = panel?.querySelector('.profile-heading h3')?.textContent?.trim() || '';
-    const emptyTitle = panel?.querySelector('.empty b')?.textContent?.trim() || '';
-    return title || emptyTitle;
-  }
-
-  function scrollToProfilePanel() {
-    const panel = profilePanel();
-    if (!panel) return false;
-
-    panel.style.scrollMarginTop = '96px';
-    panel.scrollIntoView({ behavior: 'smooth', block: 'start', inline: 'nearest' });
-    panel.animate?.([
-      { boxShadow: '0 0 0 0 rgba(14, 116, 144, 0)' },
-      { boxShadow: '0 0 0 5px rgba(14, 116, 144, .14)' },
-      { boxShadow: '0 0 0 0 rgba(14, 116, 144, 0)' },
-    ], { duration: 900, easing: 'ease-out' });
-    return true;
-  }
-
-  function requestProfileScroll() {
-    pendingProfileScroll = true;
-    window.setTimeout(scrollToProfilePanel, 80);
-    window.setTimeout(scrollToProfilePanel, 320);
-    window.setTimeout(scrollToProfilePanel, 750);
-  }
-
-  document.addEventListener('click', (event) => {
-    const button = event.target?.closest?.('button');
-    if (!button) return;
-
-    const label = button.textContent?.trim().toLowerCase() || '';
-    if (label === 'profile' && button.closest('.patient-row')) requestProfileScroll();
-  }, true);
-
-  const observer = new MutationObserver(() => {
-    const panel = profilePanel();
-    const title = profileTitle(panel);
-
-    if (!panel || !title || title === 'No profile selected') return;
-
-    if (pendingProfileScroll || title !== lastProfileTitle) {
-      pendingProfileScroll = false;
-      lastProfileTitle = title;
-      window.setTimeout(scrollToProfilePanel, 120);
-    }
-  });
-
+  function profilePanel() { return document.querySelector('.patient-profile-panel'); }
+  function profileTitle(panel) { return panel?.querySelector('.profile-heading h3')?.textContent?.trim() || panel?.querySelector('.empty b')?.textContent?.trim() || ''; }
+  function scrollToProfilePanel() { const panel = profilePanel(); if (!panel) return false; panel.style.scrollMarginTop = '96px'; panel.scrollIntoView({ behavior: 'smooth', block: 'start', inline: 'nearest' }); panel.animate?.([{ boxShadow: '0 0 0 0 rgba(14, 116, 144, 0)' }, { boxShadow: '0 0 0 5px rgba(14, 116, 144, .14)' }, { boxShadow: '0 0 0 0 rgba(14, 116, 144, 0)' }], { duration: 900, easing: 'ease-out' }); return true; }
+  function requestProfileScroll() { pendingProfileScroll = true; window.setTimeout(scrollToProfilePanel, 80); window.setTimeout(scrollToProfilePanel, 320); window.setTimeout(scrollToProfilePanel, 750); }
+  document.addEventListener('click', (event) => { const button = event.target?.closest?.('button'); if (!button) return; const label = button.textContent?.trim().toLowerCase() || ''; if (label === 'profile' && button.closest('.patient-row')) requestProfileScroll(); }, true);
+  const observer = new MutationObserver(() => { const panel = profilePanel(); const title = profileTitle(panel); if (!panel || !title || title === 'No profile selected') return; if (pendingProfileScroll || title !== lastProfileTitle) { pendingProfileScroll = false; lastProfileTitle = title; window.setTimeout(scrollToProfilePanel, 120); } });
   observer.observe(document.documentElement, { childList: true, subtree: true, characterData: true });
+})();
+
+(() => {
+  const pageSize = 10;
+  let currentPage = 0;
+  let lastSignature = '';
+  let updating = false;
+  function directoryCard() { return Array.from(document.querySelectorAll('.portal-card.full-card')).find((card) => (card.querySelector('.card-title h3')?.textContent?.trim().toLowerCase() || '') === 'patient directory'); }
+  function makeButton(label, disabled, onClick) { const control = document.createElement('button'); control.type = 'button'; control.textContent = label; control.disabled = disabled; control.style.border = '1px solid #d8e7f3'; control.style.background = disabled ? '#f4f8fb' : '#ffffff'; control.style.color = disabled ? '#94a3b8' : '#064e7a'; control.style.borderRadius = '999px'; control.style.padding = '8px 12px'; control.style.fontWeight = '800'; control.style.cursor = disabled ? 'not-allowed' : 'pointer'; control.addEventListener('click', onClick); return control; }
+  function applyPagination() { if (updating) return; const card = directoryCard(); const list = card?.querySelector('.table-list'); if (!card || !list) return; const rows = Array.from(list.querySelectorAll(':scope > .patient-row')); const existing = card.querySelector('.patient-pagination'); if (!rows.length) { existing?.remove(); lastSignature = ''; return; } const signature = rows.map((row) => row.textContent?.slice(0, 120) || '').join('|'); if (signature !== lastSignature) { currentPage = 0; lastSignature = signature; } const totalPages = Math.max(1, Math.ceil(rows.length / pageSize)); currentPage = Math.min(currentPage, totalPages - 1); const start = currentPage * pageSize; const end = start + pageSize; rows.forEach((row, index) => { row.style.display = index >= start && index < end ? '' : 'none'; }); updating = true; existing?.remove(); const controls = document.createElement('div'); controls.className = 'patient-pagination'; controls.style.display = 'flex'; controls.style.alignItems = 'center'; controls.style.justifyContent = 'space-between'; controls.style.gap = '10px'; controls.style.flexWrap = 'wrap'; controls.style.marginTop = '14px'; controls.style.padding = '12px'; controls.style.border = '1px solid #e3edf5'; controls.style.borderRadius = '16px'; controls.style.background = '#f8fbfe'; const info = document.createElement('span'); info.textContent = `Showing ${start + 1}-${Math.min(end, rows.length)} of ${rows.length} patients`; info.style.color = '#476579'; info.style.fontWeight = '800'; info.style.fontSize = '13px'; const actions = document.createElement('div'); actions.style.display = 'flex'; actions.style.gap = '8px'; actions.append(makeButton('Previous', currentPage === 0, () => { currentPage = Math.max(0, currentPage - 1); applyPagination(); card.scrollIntoView({ behavior: 'smooth', block: 'start' }); }), makeButton('Next', currentPage >= totalPages - 1, () => { currentPage = Math.min(totalPages - 1, currentPage + 1); applyPagination(); card.scrollIntoView({ behavior: 'smooth', block: 'start' }); })); controls.append(info, actions); list.after(controls); updating = false; }
+  const observer = new MutationObserver(() => window.requestAnimationFrame(applyPagination));
+  observer.observe(document.documentElement, { childList: true, subtree: true, characterData: true });
+  window.setInterval(applyPagination, 1200);
 })();
