@@ -187,3 +187,64 @@
 
   window.Blob.prototype = NativeBlob.prototype;
 })();
+
+// Frontend-only UX fix: when the owner opens a patient profile, bring the
+// profile card into view instead of leaving it somewhere lower on the page.
+(() => {
+  let pendingProfileScroll = false;
+  let lastProfileTitle = '';
+
+  function profilePanel() {
+    return document.querySelector('.patient-profile-panel');
+  }
+
+  function profileTitle(panel) {
+    const title = panel?.querySelector('.profile-heading h3')?.textContent?.trim() || '';
+    const emptyTitle = panel?.querySelector('.empty b')?.textContent?.trim() || '';
+    return title || emptyTitle;
+  }
+
+  function scrollToProfilePanel() {
+    const panel = profilePanel();
+    if (!panel) return false;
+
+    panel.style.scrollMarginTop = '96px';
+    panel.scrollIntoView({ behavior: 'smooth', block: 'start', inline: 'nearest' });
+    panel.animate?.([
+      { boxShadow: '0 0 0 0 rgba(14, 116, 144, 0)' },
+      { boxShadow: '0 0 0 5px rgba(14, 116, 144, .14)' },
+      { boxShadow: '0 0 0 0 rgba(14, 116, 144, 0)' },
+    ], { duration: 900, easing: 'ease-out' });
+    return true;
+  }
+
+  function requestProfileScroll() {
+    pendingProfileScroll = true;
+    window.setTimeout(scrollToProfilePanel, 80);
+    window.setTimeout(scrollToProfilePanel, 320);
+    window.setTimeout(scrollToProfilePanel, 750);
+  }
+
+  document.addEventListener('click', (event) => {
+    const button = event.target?.closest?.('button');
+    if (!button) return;
+
+    const label = button.textContent?.trim().toLowerCase() || '';
+    if (label === 'profile' && button.closest('.patient-row')) requestProfileScroll();
+  }, true);
+
+  const observer = new MutationObserver(() => {
+    const panel = profilePanel();
+    const title = profileTitle(panel);
+
+    if (!panel || !title || title === 'No profile selected') return;
+
+    if (pendingProfileScroll || title !== lastProfileTitle) {
+      pendingProfileScroll = false;
+      lastProfileTitle = title;
+      window.setTimeout(scrollToProfilePanel, 120);
+    }
+  });
+
+  observer.observe(document.documentElement, { childList: true, subtree: true, characterData: true });
+})();
