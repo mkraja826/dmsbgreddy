@@ -193,11 +193,15 @@
       badge.dataset.overdueTreatmentBadge = 'true';
       navButton.appendChild(badge);
     }
-    badge.textContent = String(rows.length);
+    const nextCount = String(rows.length);
+    if (badge.textContent !== nextCount) badge.textContent = nextCount;
     badge.title = `${rows.length} overdue treatment appointment${rows.length === 1 ? '' : 's'}`;
   }
 
   function updateButtonLabel(button) {
+    const nextCount = String(rows.length);
+    if (button.dataset.overdueCount === nextCount) return;
+    button.dataset.overdueCount = nextCount;
     button.innerHTML = `Overdue treatment <span class="oc-overdue-count">${rows.length}</span>`;
   }
 
@@ -417,7 +421,7 @@
       .then(() => {
         updateButtonLabel(button);
         updateNavigationBadge();
-        if (active && scheduleCard() === card) renderPanel(card);
+        if (active && scheduleCard() === card && !card.querySelector(`#${PANEL_ID}`)) renderPanel(card);
       })
       .catch(() => {});
   }
