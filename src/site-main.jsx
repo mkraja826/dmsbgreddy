@@ -6,7 +6,23 @@ function loadPrivateFileHelper() {
   document.body.appendChild(script);
 }
 
+function prepareOwnerTheme() {
+  const root = document.documentElement;
+  const values = {
+    '--line': '#e4eaf2',
+    '--text': '#101828',
+    '--muted': '#667085',
+    '--blue': '#155eef',
+    '--red': '#d92d20',
+    '--red-soft': '#fef3f2',
+    '--shadow-lg': '0 24px 70px rgba(16, 24, 40, .16)',
+  };
+  Object.entries(values).forEach(([name, value]) => root.style.setProperty(name, value));
+  document.title = 'Clinic Owner Dashboard | BG Reddy Dental Clinic';
+}
+
 if (window.location.hash === '#dms') {
+  prepareOwnerTheme();
   import('./owner-main.jsx').then(loadPrivateFileHelper);
 } else {
   const portalLabels = new Set(['clinic login', 'owner login', 'login']);
