@@ -23,7 +23,10 @@ function prepareOwnerTheme() {
 
 if (window.location.hash === '#dms') {
   prepareOwnerTheme();
-  import('./owner-main.jsx').then(loadPrivateFileHelper);
+  Promise.all([
+    import('./owner-main.jsx'),
+    import('./excel-reports.js'),
+  ]).then(loadPrivateFileHelper);
 } else {
   const portalLabels = new Set(['clinic login', 'owner login', 'login']);
   document.addEventListener('click', (event) => {
