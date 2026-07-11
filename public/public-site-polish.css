@@ -1,72 +1,110 @@
-/* Final public-site trust polish: do not present generated placeholders as clinic photography. */
+/* Final public-site trust polish: use verified clinic proof and real photography. */
 .gallery-section {
   display: none !important;
 }
 
 .doctor-visual {
   isolation: isolate;
-  display: grid;
-  place-items: center;
-  background:
-    radial-gradient(circle at 24% 22%, rgba(255, 255, 255, .9) 0 7%, transparent 7.5%),
-    radial-gradient(circle at 78% 76%, rgba(21, 166, 183, .22), transparent 25%),
-    linear-gradient(145deg, #f7fbff 0%, #e7f3ff 52%, #d5ebff 100%) !important;
+  display: block;
+  background: linear-gradient(145deg, #f7fbff 0%, #e7f3ff 52%, #d5ebff 100%) !important;
 }
 
 .doctor-visual > img {
-  display: none !important;
+  display: block !important;
+  width: 100%;
+  height: 100%;
+  min-height: 560px;
+  object-fit: cover;
+  object-position: center 33%;
 }
 
 .doctor-visual::before {
-  content: "RR";
-  position: relative;
+  content: "";
+  position: absolute;
+  inset: 0;
   z-index: 1;
-  width: min(56%, 260px);
-  aspect-ratio: 1;
-  display: grid;
-  place-items: center;
-  border: 10px solid rgba(255, 255, 255, .78);
-  border-radius: 50%;
-  color: #ffffff;
-  background:
-    radial-gradient(circle at 34% 26%, rgba(255, 255, 255, .32), transparent 23%),
-    linear-gradient(145deg, #1769e0, #0b2d64 70%);
-  box-shadow: 0 28px 70px rgba(11, 45, 100, .24);
-  font-size: clamp(64px, 10vw, 110px);
-  font-weight: 750;
-  letter-spacing: -.08em;
-  text-indent: -.08em;
+  pointer-events: none;
+  background: linear-gradient(180deg, transparent 56%, rgba(7, 29, 66, .12));
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .36);
 }
 
 .doctor-visual::after {
-  content: "Doctor profile";
+  content: "";
   position: absolute;
-  inset: 22px 22px auto auto;
-  width: auto;
-  height: auto;
-  padding: 8px 11px;
-  border: 1px solid rgba(23, 105, 224, .18);
-  border-radius: 999px;
-  color: #0f52b5;
-  background: rgba(255, 255, 255, .82);
-  font-size: 10px;
-  font-weight: 700;
-  letter-spacing: .1em;
-  text-transform: uppercase;
-  backdrop-filter: blur(10px);
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+  background: linear-gradient(to top, rgba(7, 29, 66, .6), transparent 46%);
 }
 
 .doctor-name-card {
+  z-index: 3 !important;
   background: rgba(7, 29, 66, .9) !important;
 }
 
+.trust-grid .trust-proof {
+  position: relative;
+  overflow: hidden;
+  min-height: 122px;
+  padding: 18px 16px;
+  background: linear-gradient(145deg, #ffffff, #f6faff);
+}
+
+.trust-grid .trust-proof::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 22%;
+  right: 22%;
+  height: 3px;
+  border-radius: 0 0 999px 999px;
+  background: linear-gradient(90deg, #1769e0, #15a6b7);
+}
+
+.trust-grid .trust-proof.patients::before {
+  background: linear-gradient(90deg, #0d9b6c, #15a6b7);
+}
+
+.trust-grid .trust-proof strong {
+  color: #0b2d64;
+  font-size: clamp(28px, 3vw, 36px);
+  line-height: 1;
+  letter-spacing: -.045em;
+  font-weight: 790;
+}
+
+.trust-grid .trust-proof span {
+  margin-top: 8px;
+  color: #243b56;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.trust-grid .trust-proof small {
+  display: block;
+  margin-top: 4px;
+  color: #7b8a9d;
+  font-size: 10px;
+  font-weight: 500;
+  line-height: 1.35;
+}
+
 @media (max-width: 620px) {
-  .doctor-visual::before {
-    width: min(62%, 220px);
+  .doctor-visual > img {
+    min-height: 430px;
+    object-position: center 30%;
   }
 
-  .doctor-visual::after {
-    top: 14px;
-    right: 14px;
+  .trust-grid .trust-proof {
+    min-height: 108px;
+    padding: 16px 10px;
+  }
+
+  .trust-grid .trust-proof strong {
+    font-size: 27px;
+  }
+
+  .trust-grid .trust-proof small {
+    display: none;
   }
 }
