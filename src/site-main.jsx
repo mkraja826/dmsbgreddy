@@ -1,9 +1,17 @@
-function loadPrivateFileHelper() {
-  if (document.querySelector('script[src^="/private-file-signing.js"]')) return;
-  const script = document.createElement('script');
-  script.src = '/private-file-signing.js?v=4';
-  script.defer = true;
-  document.body.appendChild(script);
+function loadOwnerScript(src) {
+  return new Promise((resolve) => {
+    if (document.querySelector(`script[src^="${src.split('?')[0]}"]`)) {
+      resolve();
+      return;
+    }
+
+    const script = document.createElement('script');
+    script.src = src;
+    script.defer = true;
+    script.onload = resolve;
+    script.onerror = resolve;
+    document.body.appendChild(script);
+  });
 }
 
 function prepareOwnerTheme() {
@@ -26,17 +34,10 @@ if (window.location.hash === '#dms') {
   Promise.all([
     import('./owner-main.jsx'),
     import('./excel-reports.js'),
-  ]).then(loadPrivateFileHelper);
+    loadOwnerScript('/private-file-signing.js?v=4'),
+    loadOwnerScript('/overdue-treatment.js?v=1'),
+    loadOwnerScript('/human-export-guard.js?v=1'),
+  ]);
 } else {
-  const portalLabels = new Set(['clinic login', 'owner login', 'login']);
-  document.addEventListener('click', (event) => {
-    const button = event.target.closest('button');
-    if (!button || !portalLabels.has(button.textContent.trim().toLowerCase())) return;
-    event.preventDefault();
-    event.stopPropagation();
-    event.stopImmediatePropagation();
-    window.location.hash = 'dms';
-    window.location.reload();
-  }, true);
   import('./fast-main.jsx');
 }
