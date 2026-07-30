@@ -37,6 +37,7 @@ if (window.location.hash === '#dms') {
     loadOwnerScript('/private-file-signing.js?v=4'),
     loadOwnerScript('/overdue-treatment.js?v=1'),
     loadOwnerScript('/human-export-guard.js?v=1'),
+    loadOwnerScript('/owner-payment-management.js?v=1'),
   ]);
 } else {
   import('./fast-main.jsx');
